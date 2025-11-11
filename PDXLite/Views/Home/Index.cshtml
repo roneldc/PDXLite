@@ -1,0 +1,655 @@
+﻿@{
+    ViewData["Title"] = "PDXLite - PDF Text Extractor";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link href="~/css/site.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="container">
+        <header class="app-header-focused">
+            <h1 class="logo-text-focused"><span class="accent-pdx-teal">PDX</span>Lite</h1>
+            <p class="tagline-focused">AI that turns PDFs into JSON.<br />Need a custom format? Get in touch.</p>
+        </header>
+
+        <div class="user-info" id="userInfo">
+            <span id="userEmail"></span>&nbsp;<span id="emailStatus" style="margin-left: 10px;"></span>
+            <button class="logout-btn" onclick="logout()">Sign Out</button>
+        </div>
+
+        <div class="main-content">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('extract')">Extract PDF</button>
+                <button class="tab" id="loginTab" onclick="switchTab('login')">Login</button>
+                <button class="tab" id="registerTab" onclick="switchTab('register')">Get API Access</button>
+                <button class="tab hidden" id="historyTab" onclick="switchTab('history')">History</button>
+                <button class="tab hidden" id="apiKeyTab" onclick="switchTab('apikey')">API Key</button>
+                <button class="tab" onclick="switchTab('about')">About</button>
+            </div>
+
+            <!-- Extract PDF Tab (Default) -->
+            <div id="extract" class="tab-content active">
+                <div class="info-banner" id="banner">
+                    <p><b>🚀 Start free!</b> Text-only PDF extraction, no login needed.<em> Scanned PDFs excluded.</em></p>
+                    <p>Want history and API access? <a href="#" onclick="switchTab('register'); return false;">Sign up</a>.</p>
+                </div>
+
+                <!-- Email Confirmation Warning -->
+                <div id="emailConfirmationWarning" class="email-warning-banner hidden">
+                    <strong>⚠️ Please Confirm Your Email</strong>
+                    <p>
+                        You need to confirm your email address to use the API.
+                        Check your inbox for the confirmation link.
+                    </p>
+                    <p>Didn't receive it? <span class="resend-link" onclick="showResendForm()">Resend confirmation email</span></p>
+                </div>
+
+                <h2 style="margin-bottom:20px;">Extract Text from PDF</h2>
+                <div id="extractAlert"></div>
+                <form onsubmit="handleExtract(event)">
+                    <div class="form-group">
+                        <input type="file" id="pdfFile" accept=".pdf" required>
+                    </div>
+                    <button type="submit" class="btn" id="extractBtn">Extract & Analyze</button>
+                </form>
+
+                <div id="extractResult" class="result-container hidden">
+                    <h3>Extraction Result</h3>
+                    <div class="metadata" id="metadata"></div>
+                    <button class="copy-btn" onclick="copyJson()">Copy JSON</button>
+                    <div class="json-output" id="jsonOutput"></div>
+                </div>
+            </div>
+
+            <!-- Login Tab -->
+            <div id="login" class="tab-content">
+                <h2 style="margin-bottom:20px;">Login to Your Account</h2>
+                <div id="loginAlert"></div>
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn">Login</button>
+                </form>
+                <p style="margin-top: 20px; text-align: center;">
+                    Don't have an account? <a href="#" onclick="switchTab('register'); return false;">Sign up for API access</a>
+                </p>
+            </div>
+
+            <!-- Register Tab -->
+            <div id="register" class="tab-content">
+                <h2>Get API Access</h2>
+                <p style="margin-bottom: 20px; color: #666;">Create an account to get your API key and save extraction history</p>
+                <div id="registerAlert"></div>
+                <form onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="registerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="registerEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password (min 8 characters)</label>
+                        <input type="password" id="registerPassword" minlength="8" required>
+                        <small style="color: #666; font-size: 12px;">
+                            Must contain: uppercase, lowercase, number, and special character (@@$!%*?&)
+                        </small>
+                    </div>
+                    <button type="submit" class="btn">Sign Up & Get API Key</button>
+                </form>
+                <p style="margin-top: 20px; text-align: center;">
+                    Already have an account? <a href="#" onclick="switchTab('login'); return false;">Login</a>
+                </p>
+            </div>
+
+            <!-- History Tab -->
+            <div id="history" class="tab-content">
+                <h2 style="margin-bottom:20px;">Extraction History</h2>
+                <div id="historyList"></div>
+            </div>
+
+            <!-- API Key Tab -->
+            <div id="apikey" class="tab-content">
+                <h2>Your API Key</h2>
+                <div class="api-key-display">
+                    <strong>API Key:</strong>
+                    <div class="api-key-value" id="apiKeyValue">Loading...</div>
+                    <button class="copy-btn" onclick="copyApiKey()">Copy API Key</button>
+                </div>
+                <div style="margin-top: 30px;">
+                    <h3>How to Use Your API Key</h3>
+                    <p style="margin: 15px 0;">Use your API key to make requests to the PDXLite API:</p>
+                    <div class="json-output" style="font-size: 14px;">curl -X POST https://yourdomain.com/api/pdf/extract \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -F "file=@@document.pdf"</div>
+                    <p style="margin-top: 15px; color: #666; font-size: 14px;">
+                        <strong>Note:</strong> Keep your API key secure and never share it publicly.
+                    </p>
+                </div>
+            </div>
+
+            <!-- About Tab -->
+            <div id="about" class="tab-content">
+                <center>
+                    <h2 style="margin-bottom:20px;">About PDXLite</h2>
+                    <p>
+                        Built by John Ronel Dela Cruz, PDXLite uses AI to turn your PDFs into clean, structured JSON.
+                    </p>
+                    <p>
+                        Need custom JSON or XML formats? Let’s connect.
+                    </p>
+
+                    <p style="margin-top:20px;">
+                        📧 <a href="mailto:johnroneldc@gmail.com">johnroneldc@gmail.com</a>
+                        | <a href="https://www.linkedin.com/in/johnroneldc" target="_blank">LinkedIn</a>
+                    </p>
+                    <p style="margin-top:30px; font-size:0.85rem; color:#555;">
+                        © 2025 PDXLite. All rights reserved.
+                    </p>
+                </center>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = localStorage.getItem('pdxlite_token');
+        let userApiKey = localStorage.getItem('pdxlite_apikey');
+        let currentJsonData = '';
+
+        // Check if user is logged in
+        if (authToken) {
+            showAuthenticatedTabs();
+            loadUserInfo();
+        }
+
+        // Check for email confirmation token in URL
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const confirmToken = urlParams.get('token');
+            if (confirmToken) {
+                confirmEmailFromUrl(confirmToken);
+            }
+        });
+
+        async function confirmEmailFromUrl(token) {
+            // Show loading state
+            showAlert('loginAlert', 'Confirming your email...', 'info');
+
+            try {
+                const response = await fetch('/api/auth/confirm-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: token })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Clear token from URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+
+                    showAlert('loginAlert',
+                        '✔️ ' + result.message + ' You can now login to access your API key.',
+                        'success');
+
+                    switchTab('login');
+                } else {
+                    showAlert('loginAlert',
+                        '❌ ' + (result.error?.message || 'Email confirmation failed. The link may be expired or invalid.'),
+                        'error');
+
+                    // Show resend option
+                    const resendHtml = `
+                                <div style="margin-top: 15px;">
+                                    <p>Need a new confirmation link?</p>
+                                    <button onclick="showResendForm()" class="btn" style="width: auto; padding: 10px 20px;">
+                                        Resend Confirmation Email
+                                    </button>
+                                </div>
+                            `;
+                    document.getElementById('loginAlert').innerHTML += resendHtml;
+
+                    switchTab('login');
+                }
+            } catch (error) {
+                showAlert('loginAlert', '❌ Error confirming email: ' + error.message, 'error');
+                switchTab('login');
+            }
+        }
+
+        function showResendForm() {
+            switchTab('register');
+            document.getElementById('registerAlert').innerHTML = `
+                        <div class="alert alert-info">
+                            <h3>Resend Confirmation Email</h3>
+                            <form onsubmit="handleResendConfirmation(event)" style="margin-top: 15px;">
+                                <div class="form-group">
+                                    <label>Email Address</label>
+                                    <input type="email" id="resendEmail" required>
+                                </div>
+                                <button type="submit" class="btn">Resend Confirmation</button>
+                            </form>
+                        </div>
+                    `;
+        }
+
+        async function handleResendConfirmation(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('resendEmail').value;
+
+            try {
+                const response = await fetch('/api/auth/resend-confirmation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showAlert('registerAlert', '✔️ ' + result.message, 'success');
+                    setTimeout(() => {
+                        switchTab('login');
+                    }, 2000);
+                } else {
+                    showAlert('registerAlert', '❌ ' + (result.error?.message || 'Failed to resend confirmation'), 'error');
+                }
+            } catch (error) {
+                showAlert('registerAlert', '❌ Error: ' + error.message, 'error');
+            }
+        }
+
+
+        function switchTab(tabName) {
+            // Remove active class from all tabs and contents
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            // Find and activate the clicked tab
+            const tabButtons = document.querySelectorAll('.tab');
+            tabButtons.forEach(btn => {
+                if (btn.textContent.includes(getTabLabel(tabName))) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Show the selected content
+            const contentElement = document.getElementById(tabName);
+            if (contentElement) {
+                contentElement.classList.add('active');
+            }
+
+            if (tabName === 'history' && authToken) {
+                loadHistory();
+            } else if (tabName === 'apikey' && authToken) {
+                displayApiKey();
+            }
+        }
+
+        function getTabLabel(tabName) {
+            const labels = {
+                'extract': 'Extract PDF',
+                'login': 'Login',
+                'register': 'Get API Access',
+                'history': 'History',
+                'apikey': 'API Key',
+                'about': 'About'
+            };
+            return labels[tabName] || tabName;
+        }
+
+        function showAuthenticatedTabs() {
+            document.getElementById('historyTab').classList.remove('hidden');
+            document.getElementById('apiKeyTab').classList.remove('hidden');
+            document.getElementById('loginTab').classList.add('hidden');
+            document.getElementById('registerTab').classList.add('hidden');
+            document.getElementById('banner').classList.add('hidden');
+            document.getElementById('userInfo').classList.add('active');
+        }
+
+        function hideAuthenticatedTabs() {
+            document.getElementById('historyTab').classList.add('hidden');
+            document.getElementById('apiKeyTab').classList.add('hidden');
+            document.getElementById('emailConfirmationWarning').classList.add('hidden');
+            document.getElementById('loginTab').classList.remove('hidden');
+            document.getElementById('registerTab').classList.remove('hidden');
+            document.getElementById('banner').classList.remove('hidden');
+            document.getElementById('userInfo').classList.remove('active');
+        }
+
+        function loadUserInfo() {
+            const userEmail = localStorage.getItem('pdxlite_email');
+            const emailConfirmed = localStorage.getItem('pdxlite_email_confirmed') === 'true';
+
+            if (userEmail) {
+                document.getElementById('userEmail').textContent = userEmail;
+
+                const statusSpan = document.getElementById('emailStatus');
+                if (emailConfirmed) {
+                    statusSpan.innerHTML = '<span class="email-confirmed-badge">✓ Verified</span>';
+                    // Hide warning banner
+                    document.getElementById('emailConfirmationWarning').classList.add('hidden');
+                } else {
+                    statusSpan.innerHTML = '<span class="email-unconfirmed-badge">⚠ Unverified</span>';
+                    // Show warning banner
+                    document.getElementById('emailConfirmationWarning').classList.remove('hidden');
+                }
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('pdxlite_token');
+            localStorage.removeItem('pdxlite_apikey');
+            localStorage.removeItem('pdxlite_email');
+            authToken = null;
+            userApiKey = null;
+            hideAuthenticatedTabs();
+            switchTab('extract');
+            showAlert('extractAlert', 'Logged out successfully', 'success');
+        }
+
+        function showAlert(elementId, message, type) {
+            const alertDiv = document.getElementById(elementId);
+            alertDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => alertDiv.innerHTML = '', 5000);
+        }
+
+        async function handleRegister(event) {
+            event.preventDefault();
+            
+            const password = document.getElementById('registerPassword').value;
+            
+            // Client-side password validation
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@@$!%*?&])[A-Za-z\d@@$!%*?&]{8,}$/;
+            if (!passwordRegex.test(password)) {
+                showAlert('registerAlert', 
+                    'Password must be at least 8 characters and contain uppercase, lowercase, number, and special character (@@$!%*?&)', 
+                    'error');
+                return;
+            }
+            
+            const data = {
+                fullName: document.getElementById('registerName').value,
+                email: document.getElementById('registerEmail').value,
+                password: password
+            };
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    authToken = result.token;
+                    userApiKey = result.apiKey;
+                    localStorage.setItem('pdxlite_token', authToken);
+                    if (result.apiKey) {
+                        localStorage.setItem('pdxlite_apikey', userApiKey);
+                    }
+                    localStorage.setItem('pdxlite_email', result.email);
+                    localStorage.setItem('pdxlite_email_confirmed', result.emailConfirmed);
+                    
+                    showAlert('registerAlert', 
+                        result.message || 'Registration successful! Please check your email to confirm your account.', 
+                        'success');
+                    
+                    setTimeout(() => {
+                        showAuthenticatedTabs();
+                        loadUserInfo();
+                        switchTab('extract');
+                    }, 2000);
+                } else {
+                    const errorMsg = result.error?.message || result.message || 'Registration failed';
+                    showAlert('registerAlert', errorMsg, 'error');
+                }
+            } catch (error) {
+                showAlert('registerAlert', 'Error: ' + error.message, 'error');
+            }
+        }
+
+
+        async function handleLogin(event) {
+            event.preventDefault();
+
+            const data = {
+                email: document.getElementById('loginEmail').value,
+                password: document.getElementById('loginPassword').value
+            };
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    authToken = result.token;
+                    userApiKey = result.apiKey;
+                    localStorage.setItem('pdxlite_token', authToken);
+                    if (result.apiKey) {
+                        localStorage.setItem('pdxlite_apikey', userApiKey);
+                    }
+                    localStorage.setItem('pdxlite_email', result.email);
+                    localStorage.setItem('pdxlite_email_confirmed', result.emailConfirmed);
+
+                    const message = result.message || 'Login successful!';
+                    showAlert('loginAlert', message, result.emailConfirmed ? 'success' : 'info');
+
+                    setTimeout(() => {
+                        showAuthenticatedTabs();
+                        loadUserInfo();
+                        switchTab('extract');
+                    }, 1500);
+                } else {
+                    const errorMsg = result.error?.message || result.message || 'Login failed';
+                    showAlert('loginAlert', errorMsg, 'error');
+                }
+            } catch (error) {
+                showAlert('loginAlert', 'Error: ' + error.message, 'error');
+            }
+        }
+
+        async function handleExtract(event) {
+            event.preventDefault();
+
+            const fileInput = document.getElementById('pdfFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showAlert('extractAlert', 'Please select a PDF file', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const extractBtn = document.getElementById('extractBtn');
+            extractBtn.disabled = true;
+            extractBtn.textContent = 'Processing...';
+
+            try {
+                const headers = {};
+                if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+
+                const response = await fetch('/api/pdf/extract', {
+                    method: 'POST',
+                    headers,
+                    body: formData
+                });
+
+                let result = null;
+                try {
+                    const text = await response.text();
+                    result = text ? JSON.parse(text) : null;
+                } catch (err) {
+                    console.warn("Non-JSON response received:", err);
+                }
+
+                if (response.ok) {
+                    showAlert('extractAlert', result?.message || 'Extraction completed', 'success');
+                    if (result) displayResult(result);
+                } else {
+                    showAlert('extractAlert', result?.message || `Extraction failed (HTTP ${response.status})`, 'error');
+                }
+            } catch (error) {
+                showAlert('extractAlert', 'Error: ' + error.message, 'error');
+            } finally {
+                extractBtn.disabled = false;
+                extractBtn.textContent = 'Extract & Analyze';
+            }
+        }
+
+        function displayResult(result) {
+            const resultContainer = document.getElementById('extractResult');
+            const metadataDiv = document.getElementById('metadata');
+            const jsonOutput = document.getElementById('jsonOutput');
+
+            currentJsonData = JSON.stringify(result.data, null, 2);
+
+            metadataDiv.innerHTML = `
+                <div class="metadata-item">
+                    <div class="metadata-label">File Name</div>
+                    <div class="metadata-value">${result.metadata.fileName}</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">File Size</div>
+                    <div class="metadata-value">${(result.metadata.fileSize / 1024).toFixed(2)} KB</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">Pages</div>
+                    <div class="metadata-value">${result.metadata.pageCount}</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="metadata-label">Extracted At</div>
+                    <div class="metadata-value">${new Date(result.metadata.extractedAt).toLocaleString()}</div>
+                </div>
+            `;
+
+            jsonOutput.textContent = currentJsonData;
+            resultContainer.classList.remove('hidden');
+        }
+
+        function copyJson() {
+            navigator.clipboard.writeText(currentJsonData).then(() => {
+                alert('JSON copied to clipboard!');
+            });
+        }
+
+        function displayApiKey() {
+            const apiKeyValue = document.getElementById('apiKeyValue');
+            if (userApiKey) {
+                apiKeyValue.textContent = userApiKey;
+            } else {
+                apiKeyValue.textContent = 'API key not found. Please log in again or check your email for confirmation.';
+            }
+        }
+
+        function copyApiKey() {
+            if (userApiKey) {
+                navigator.clipboard.writeText(userApiKey).then(() => {
+                    alert('API key copied to clipboard!');
+                });
+            }
+        }
+
+        async function loadHistory() {
+            const historyList = document.getElementById('historyList');
+            historyList.innerHTML = '<div class="loading"><div class="spinner"></div>Loading history...</div>';
+
+            try {
+                const response = await fetch('/api/pdf/history', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (result.items.length === 0) {
+                        historyList.innerHTML = '<p>No extraction history yet.</p>';
+                    } else {
+                        historyList.innerHTML = result.items.map(item => `
+                            <div class="history-item" onclick="viewHistoryDetail(${item.id})">
+                                <strong>${item.fileName}</strong><br>
+                                <small>Pages: ${item.pageCount} | Size: ${(item.fileSize / 1024).toFixed(2)} KB | ${new Date(item.extractedAt).toLocaleString()}</small>
+                            </div>
+                        `).join('');
+                    }
+                } else {
+                    historyList.innerHTML = '<p>Failed to load history</p>';
+                }
+            } catch (error) {
+                historyList.innerHTML = '<p>Error loading history</p>';
+            }
+        }
+
+        async function viewHistoryDetail(id) {
+            try {
+                const response = await fetch(`/api/pdf/history/${id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    currentJsonData = JSON.stringify(result.data, null, 2);
+                    
+                    switchTab('extract');
+                    
+                    const resultContainer = document.getElementById('extractResult');
+                    const metadataDiv = document.getElementById('metadata');
+                    const jsonOutput = document.getElementById('jsonOutput');
+
+                    metadataDiv.innerHTML = `
+                        <div class="metadata-item">
+                            <div class="metadata-label">File Name</div>
+                            <div class="metadata-value">${result.fileName}</div>
+                        </div>
+                        <div class="metadata-item">
+                            <div class="metadata-label">File Size</div>
+                            <div class="metadata-value">${(result.fileSize / 1024).toFixed(2)} KB</div>
+                        </div>
+                        <div class="metadata-item">
+                            <div class="metadata-label">Pages</div>
+                            <div class="metadata-value">${result.pageCount}</div>
+                        </div>
+                        <div class="metadata-item">
+                            <div class="metadata-label">Extracted At</div>
+                            <div class="metadata-value">${new Date(result.extractedAt).toLocaleString()}</div>
+                        </div>
+                    `;
+
+                    jsonOutput.textContent = currentJsonData;
+                    resultContainer.classList.remove('hidden');
+                }
+            } catch (error) {
+                alert('Error loading detail: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

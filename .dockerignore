@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/node_modules/
+*.user
+*.swp
+*.suo
+*.db
+*.sqlite
+.env

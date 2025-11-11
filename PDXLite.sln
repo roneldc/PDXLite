@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34728.123
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PDXLite", "PDXLite\PDXLite.csproj", "{895AD2C9-7810-41C1-8FBE-A46015ACF4AD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{895AD2C9-7810-41C1-8FBE-A46015ACF4AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{895AD2C9-7810-41C1-8FBE-A46015ACF4AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{895AD2C9-7810-41C1-8FBE-A46015ACF4AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{895AD2C9-7810-41C1-8FBE-A46015ACF4AD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {ED94D581-DADC-47B8-9610-CA021217FF67}
+	EndGlobalSection
+EndGlobal
