@@ -19,12 +19,12 @@ namespace PDXLite.Services
 
             _fromEmail = _configuration["Email:FromEmail"] ?? "noreply@pdxlite.com";
             _fromName = _configuration["Email:FromName"] ?? "PDXLite";
-            _appUrl = _configuration["Email:AppUrl"] ?? "https://localhost:5001";
+            _appUrl = _configuration["AppSettings:AppUrl"] ?? "https://localhost:5001";
         }
 
         public async Task SendEmailConfirmationAsync(string toEmail, string fullName, string confirmationToken)
         {
-            var confirmationUrl = $"{_appUrl}/confirm-email?token={Uri.EscapeDataString(confirmationToken)}";
+            var confirmationUrl = $"{_appUrl}/home/index/confirm-email?token={Uri.EscapeDataString(confirmationToken)}";
 
             var subject = "Confirm Your Email - PDXLite";
             var htmlBody = $@"

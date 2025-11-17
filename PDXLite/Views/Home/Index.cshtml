@@ -9,6 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"]</title>
     <link href="~/css/site.css" rel="stylesheet" />
+    <link rel="icon" type="image/png" href="~/favicon.png" />
 </head>
 <body>
     <div class="container">
@@ -131,7 +132,7 @@
                 <div style="margin-top: 30px;">
                     <h3>How to Use Your API Key</h3>
                     <p style="margin: 15px 0;">Use your API key to make requests to the PDXLite API:</p>
-                    <div class="json-output" style="font-size: 14px;">curl -X POST https://yourdomain.com/api/pdf/extract \
+                    <div class="json-output" style="font-size: 14px;">curl -X POST @ViewBag.AppUrl/api/pdf/extract \
   -H "X-API-Key: YOUR_API_KEY" \
   -F "file=@@document.pdf"</div>
                     <p style="margin-top: 15px; color: #666; font-size: 14px;">

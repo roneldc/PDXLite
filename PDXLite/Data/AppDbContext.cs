@@ -11,6 +11,7 @@ namespace PDXLite.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<ExtractionHistory> ExtractionHistories { get; set; }
+        public DbSet<PageVisit> PageVisits { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -34,6 +35,13 @@ namespace PDXLite.Data
                     .WithMany(u => u.ExtractionHistories)
                     .HasForeignKey(e => e.UserId)
                     .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            modelBuilder.Entity<PageVisit>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Page).IsRequired();
+                entity.HasIndex(e => e.VisitedAt);
             });
         }
     }
