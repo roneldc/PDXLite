@@ -11,8 +11,8 @@ using PDXLite.Data;
 namespace PDXLite.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251117153948_PageVisit")]
-    partial class PageVisit
+    [Migration("20251117155755_InitMigration")]
+    partial class InitMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
