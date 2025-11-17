@@ -153,12 +153,12 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var db = services.GetRequiredService<AppDbContext>();
-        db.Database.EnsureCreated();
-        Log.Information("Database initialized successfully");
+        db.Database.Migrate();
+        Log.Information("Database migrated successfully");
     }
     catch (Exception ex)
     {
-        Log.Fatal(ex, "An error occurred while initializing the database");
+        Log.Fatal(ex, "An error occurred while migrating the database");
         throw;
     }
 }
